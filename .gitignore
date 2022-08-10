@@ -1,0 +1,5 @@
+.markdownlint.yaml
+.shellcheckrc
+.trunk/*
+.trunk/trunk.yaml
+.trunk/trunk.yaml
