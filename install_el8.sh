@@ -21,11 +21,16 @@
 #===============================================================#
 # Installs Stenographer on Rocky Linux 8.6
 #===============================================================#
+# Note that some modifications are to allow modification to fapolicyd
+# trusted files before starting stenographer.service
 
 export KILLCMD=/usr/bin/pkill
 export BINDIR="${BINDIR-/usr/bin}"
 export GOPATH=${HOME}/go
 export PATH=${PATH}:/usr/local/go/bin
+
+# Get GID for stenographer
+STENOGRAPHER_USER_GID="$(id -g stenographer)"
 
 # Load support functions
 _scriptDir="$(dirname $(readlink -f "$0"))"
@@ -46,6 +51,15 @@ stop_processes() {
 	ReallyKill stenographer
 	ReallyKill stenotype
 }
+
+# For stenographer services and scripts to function correctly we will need to add a rule to whitelist needed directories in fapolicyd
+# such that root (uid=0) can execute scripts in the listed directories and to allow execution of stenographer and stenotype
+
+# Allow Install from $GOPATH:
+allow perm=any uid=0 : dir="${GOPATH}"
+
+# Allow $BINDIR/stenographer and $BINDIR/stenotype
+allow perm=any uid="${STENOGRAPHER_USER_GID}" : dir="${BINDIR}"/stenographer,"${BINDIR}"/stenotype
 
 install_packages() {
 	Info "Installing stenographer package requirements...  "
@@ -218,4 +232,7 @@ install_certs
 install_service
 install_stenoread
 stop_processes
+# Comment out actual start of service until fapolicyd trust mods
+# configured to allow stenographer.service to run
+# TODO Insert code to test for fapolicyd trust settings for stenographer and configure as needed
 # start_service
